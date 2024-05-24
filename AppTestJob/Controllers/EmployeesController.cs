@@ -18,22 +18,35 @@ namespace AppTestJob.Controllers
             _context = context;
         }
 
-        // GET: Employees
         public async Task<IActionResult> Index()
         {
-              return _context.Employees != null ? 
-                          View(await _context.Employees.ToListAsync()) :
-                          Problem("Entity set 'DbEmployeesContext.Employees'  is null.");
+            // Verifica si la colección de empleados en el contexto 
+            if (_context.Employees != null)
+            {
+                // Filtra los empleados activos 
+                var activeEmployees = await _context.Employees.Where(e => e.IsActive == true).ToListAsync();
+
+                // Pasa la lista de empleados 
+                return View(activeEmployees);
+            }
+            else
+            {
+                // Si la colección de empleados es nula, devuelve un resultado Problem con un mensaje de error.
+                return Problem("Entity set 'DbEmployeesContext.Employees' is null.");
+            }
         }
 
-        // GET: Employees/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            //Comprobar si existe el empleado
             if (id == null || _context.Employees == null)
             {
+                //Regresar que no fue encontrado en caso de no tenerlo
+
                 return NotFound();
             }
 
+            //Busqueda de empleado compatible con el id introducido
             var employee = await _context.Employees
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (employee == null)
@@ -44,15 +57,12 @@ namespace AppTestJob.Controllers
             return View(employee);
         }
 
-        // GET: Employees/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Employees/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+       
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Address,Dob,Salary,IsActive")] Employee employee)
@@ -96,19 +106,21 @@ namespace AppTestJob.Controllers
         }
 
 
-        // GET: Employees/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            //Validar si el id ya existe
             if (id == null || _context.Employees == null)
             {
                 return NotFound();
             }
 
+            //Buscar el empleado, y comprobar si existe tal empleado
             var employee = await _context.Employees.FindAsync(id);
             if (employee == null)
             {
                 return NotFound();
             }
+            //Regresar el empleado 
             return View(employee);
         }
 
@@ -119,18 +131,22 @@ namespace AppTestJob.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Address,Dob,Salary,IsActive")] Employee employee)
         {
+            // Validar si el id ya existe
             if (id != employee.Id)
             {
                 return NotFound();
             }
-
+            // Validar si el modelo es valido
             if (ModelState.IsValid)
             {
+
+                //Actualizar el empleado que ha sido encontrado
                 try
                 {
                     _context.Update(employee);
                     await _context.SaveChangesAsync();
                 }
+                //Ver si existe un error en la busqueda de error
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!EmployeeExists(employee.Id))
@@ -142,51 +158,59 @@ namespace AppTestJob.Controllers
                         throw;
                     }
                 }
+                //Redirección hacia el Index
                 return RedirectToAction(nameof(Index));
             }
+            //Retorno en la vista
             return View(employee);
         }
 
-        // GET: Employees/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+            //Ver si el id introducido existe, y si los empleados dentro del contexto existen
             if (id == null || _context.Employees == null)
             {
                 return NotFound();
             }
 
+            //Regresar el empleado que se encontro con el ID
             var employee = await _context.Employees
                 .FirstOrDefaultAsync(m => m.Id == id);
+            //Si no hay, regresa null
             if (employee == null)
             {
                 return NotFound();
             }
-
+            //Regresar el componente a la vista
             return View(employee);
         }
 
-        // POST: Employees/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            //Ver si existen empleados dentro de la base de datos
             if (_context.Employees == null)
             {
                 return Problem("Entity set 'DbEmployeesContext.Employees'  is null.");
             }
+
+            //Buscar empleado por ID
             var employee = await _context.Employees.FindAsync(id);
+            //Si el empleado que se encontro no es nulo, eliminar el objeto 
             if (employee != null)
             {
                 _context.Employees.Remove(employee);
             }
-            
+            //Guardar los cambios y redirigir a Index
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool EmployeeExists(int id)
         {
-          return (_context.Employees?.Any(e => e.Id == id)).GetValueOrDefault();
+            //Regresar si existe un empleado con el ID
+            return (_context.Employees?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

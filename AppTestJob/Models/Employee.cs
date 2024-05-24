@@ -20,6 +20,9 @@ public partial class Employee
     [Required(ErrorMessage = "DOB is required.")]
     [DataType(DataType.Date)]
     [DisplayFormat(DataFormatString = "{0:MM/dd/yyyy}", ApplyFormatInEditMode = true)]
+    //Los rangos de hechoa no se comprueban de manera correcta pese a tener las condicionales adecuadas
+    //[Range(typeof(DateTime), "01/01/1950", "12/31/9999", 
+    //ErrorMessage = "DOB must be in the range 01/01/1950 until today's date.")]
     public DateTime Dob { get; set; }
 
     [Required(ErrorMessage = "Salary is required.")]
